@@ -1354,140 +1354,142 @@
             handleScrollAnimation();
             
             // Counter animation
-const counters = document.querySelectorAll('.counter');
-const speed = 200;
-
-counters.forEach(counter => {
-    const updateCount = () => {
-        const target = +counter.getAttribute('data-target');
-        const count = +counter.innerText;
-
-        const inc = target / speed;
-
-        if (count < target) {
-            counter.innerText = Math.ceil(count + inc);
-            setTimeout(updateCount, 1);
-        } else {
-            counter.innerText = target;
-        }
-    };
-
-    // Start counting when element is in view
-    const observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-            updateCount();
-        }
-    });
-
-    observer.observe(counter);
-});
-
-// Time and date display
-function updateTime() {
-    const now = new Date();
-
-    // New York time
-    const nyOptions = { 
-        timeZone: 'America/New_York',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true 
-    };
-    document.getElementById('ny-time').textContent = now.toLocaleTimeString('en-US', nyOptions);
-
-    // Indonesia times
-    const wibOptions = { 
-        timeZone: 'Asia/Jakarta',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: false 
-    };
-    document.getElementById('wib-time').textContent = now.toLocaleTimeString('en-US', wibOptions);
-
-    const witaOptions = { 
-        timeZone: 'Asia/Makassar',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: false 
-    };
-    document.getElementById('wita-time').textContent = now.toLocaleTimeString('en-US', witaOptions);
-
-    const witOptions = { 
-        timeZone: 'Asia/Jayapura',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: false 
-    };
-    document.getElementById('wit-time').textContent = now.toLocaleTimeString('en-US', witOptions);
-
-    // Current date
-    const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-    document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', dateOptions);
-}
-
-// Update time immediately and then every second
-updateTime();
-setInterval(updateTime, 1000);
-
-// Audio player functionality
-const audioPlayButtons = document.querySelectorAll('.audio-play-btn');
-let currentlyPlaying = null;
-
-audioPlayButtons.forEach(button => {
-    button.addEventListener('click', function() {
-        const audioId = this.getAttribute('data-audio');
-        const audio = document.getElementById(audioId);
-        const audioContainer = this.closest('.frosted-glass');
-
-        // If this audio is already playing, pause it
-        if (audio === currentlyPlaying && !audio.paused) {
-            audio.pause();
-            this.innerHTML = '<i class="fas fa-play"></i> Play';
-            audioContainer.classList.remove('audio-playing');
-            currentlyPlaying = null;
-            return;
-        }
-
-        // Pause any currently playing audio
-        if (currentlyPlaying) {
-            currentlyPlaying.pause();
-            const currentButton = document.querySelector(`.audio-play-btn[data-audio="${currentlyPlaying.id}"]`);
-            currentButton.innerHTML = '<i class="fas fa-play"></i> Play';
-            currentButton.closest('.frosted-glass').classList.remove('audio-playing');
-        }
-
-        // Play the selected audio
-        audio.play();
-        this.innerHTML = '<i class="fas fa-pause"></i> Pause';
-        audioContainer.classList.add('audio-playing');
-        currentlyPlaying = audio;
-
-        // Update button when audio ends
-        audio.onended = function() {
-            button.innerHTML = '<i class="fas fa-play"></i> Play';
-            audioContainer.classList.remove('audio-playing');
-            currentlyPlaying = null;
-        };
-    });
-});
-
-// Ripple effect for buttons
-const rippleButtons = document.querySelectorAll('.ripple');
-rippleButtons.forEach(button => {
-    button.addEventListener('click', function(e) {
-        const x = e.clientX - e.target.getBoundingClientRect().left;
-        const y = e.clientY - e.target.getBoundingClientRect().top;
-
-        const ripples = document.createElement('span');
-        ripples.style.left = x + 'px';
-        ripples.style.top = y + 'px';
-        this.appendChild(ripples);
-
-        setTimeout(() => {
-            ripples.remove();
-        }, 1000);
-    });
-});
-</script>
-</body>
-</html>
+            const counters = document.querySelectorAll('.counter');
+            const speed = 200;
+            
+            counters.forEach(counter => {
+                const updateCount = () => {
+                    const target = +counter.getAttribute('data-target');
+                    const count = +counter.innerText;
+                    
+                    const inc = target / speed;
+                    
+                    if (count < target) {
+                        counter.innerText = Math.ceil(count + inc);
+                        setTimeout(updateCount, 1);
+                    } else {
+                        counter.innerText = target;
+                    }
+                };
+                
+                // Start counting when element is in view
+                const observer = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        updateCount();
+                    }
+                });
+                
+                observer.observe(counter);
+            });
+            
+            // Time and date display
+            function updateTime() {
+                const now = new Date();
+                
+                // New York time
+                const nyOptions = { 
+                    timeZone: 'America/New_York',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true 
+                };
+                document.getElementById('ny-time').textContent = now.toLocaleTimeString('en-US', nyOptions);
+                
+                // Indonesia times
+                const wibOptions = { 
+                    timeZone: 'Asia/Jakarta',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: false 
+                };
+                document.getElementById('wib-time').textContent = now.toLocaleTimeString('en-US', wibOptions);
+                
+                const witaOptions = { 
+                    timeZone: 'Asia/Makassar',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: false 
+                };
+                document.getElementById('wita-time').textContent = now.toLocaleTimeString('en-US', witaOptions);
+                
+                const witOptions = { 
+                    timeZone: 'Asia/Jayapura',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: false 
+                };
+                document.getElementById('wit-time').textContent = now.toLocaleTimeString('en-US', witOptions);
+                
+                // Current date
+                const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+                document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', dateOptions);
+            }
+            
+            // Update time immediately and then every second
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            // Audio player functionality
+            const audioPlayButtons = document.querySelectorAll('.audio-play-btn');
+            let currentlyPlaying = null;
+            
+            audioPlayButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const audioId = this.getAttribute('data-audio');
+                    const audio = document.getElementById(audioId);
+                    const audioContainer = this.closest('.frosted-glass');
+                    
+                    // If this audio is already playing, pause it
+                    if (audio === currentlyPlaying && !audio.paused) {
+                        audio.pause();
+                        this.innerHTML = '<i class="fas fa-play"></i> Play';
+                        audioContainer.classList.remove('audio-playing');
+                        currentlyPlaying = null;
+                        return;
+                    }
+                    
+                    // Pause any currently playing audio
+                    if (currentlyPlaying) {
+                        currentlyPlaying.pause();
+                        const currentButton = document.querySelector(`.audio-play-btn[data-audio="${currentlyPlaying.id}"]`);
+                        currentButton.innerHTML = '<i class="fas fa-play"></i> Play';
+                        currentButton.closest('.frosted-glass').classList.remove('audio-playing');
+                    }
+                    
+                    // Play the selected audio
+                    audio.play();
+                    this.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                    audioContainer.classList.add('audio-playing');
+                    currentlyPlaying = audio;
+                    
+                    // Update button when audio ends
+                    audio.onended = function() {
+                        button.innerHTML = '<i class="fas fa-play"></i> Play';
+                        audioContainer.classList.remove('audio-playing');
+                        currentlyPlaying = null;
+                    };
+                });
+            });
+            
+            // Ripple effect for buttons
+            const rippleButtons = document.querySelectorAll('.ripple');
+            rippleButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const x = e.clientX - e.target.getBoundingClientRect().left;
+                    const y = e.clientY - e.target.getBoundingClientRect().top;
+                    
+                    const ripples = document.createElement('span');
+                    ripples.style.left = x + 'px';
+                    ripples.style.top = y + 'px';
+                    this.appendChild(ripples);
+                    
+                    setTimeout(() => {
+                        ripples.remove();
+                    }, 1000);
+                });
+            });
+        });
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 11px; color: #fff; margin: 0; position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.4); padding: 3px 8px; backdrop-filter: blur(3px);">
+  by xFrmannJS
+</p>
