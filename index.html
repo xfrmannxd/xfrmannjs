@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xFrmannJS | WhatsApp Bot Developer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --neon-purple: #a855f7;
+            --neon-cyan: #06b6d4;
+            --neon-blue: #3b82f6;
+            --dark-bg: #0f172a;
+            --darker-bg: #020617;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .ripple-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(56, 182, 255, 0.1);
+            transform: scale(0);
+            animation: ripple 15s infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(10);
+                opacity: 0;
+            }
+        }
+        
+        .neon-text-purple {
+            text-shadow: 0 0 5px var(--neon-purple), 0 0 10px var(--neon-purple);
+        }
+        
+        .neon-text-cyan {
+            text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-cyan);
+        }
+        
+        .neon-text-blue {
+            text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue);
+        }
+        
+        .glow-box {
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .glow-box:hover {
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.8);
+            transform: translateY(-5px);
+        }
+        
+        .robot-logo {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .robot-eye {
+            animation: blink 4s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 48%, 52%, 100% { height: 20px; }
+            50% { height: 2px; }
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 0;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--neon-purple);
+            box-shadow: 0 0 10px var(--neon-purple);
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -23px;
+            top: 15px;
+            width: 2px;
+            height: calc(100% + 20px);
+            background: var(--neon-purple);
+        }
+        
+        .timeline-item:last-child::after {
+            display: none;
+        }
+        
+        .section {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+        
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-10px) rotate(2deg);
+            box-shadow: 0 20px 25px -5px rgba(168, 85, 247, 0.4), 0 10px 10px -5px rgba(168, 85, 247, 0.2);
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .feature-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover .feature-icon {
+            transform: scale(1.2);
+            color: var(--neon-purple);
+        }
+        
+        .price-card {
+            perspective: 1000px;
+        }
+        
+        .price-card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .price-card:hover .price-card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .price-card-front, .price-card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .price-card-back {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body>
+    <!-- Ripple Background Effect -->
+    <div class="ripple-bg" id="rippleContainer"></div>
+    
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-50 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <!-- Robot Logo -->
+            <div class="robot-logo flex items-center">
+                <div class="relative w-12 h-12 mr-2">
+                    <div class="absolute w-full h-full rounded-full bg-gray-800 flex items-center justify-center">
+                        <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                            <div class="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center overflow-hidden">
+                                <div class="relative w-full h-full">
+                                    <div class="robot-eye absolute left-1 top-1 w-2 h-5 bg-white rounded-full"></div>
+                                    <div class="robot-eye absolute right-1 top-1 w-2 h-5 bg-white rounded-full"></div>
+                                    <div class="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-4 h-1 bg-white rounded-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-2 bg-gray-600 rounded-full"></div>
+                    </div>
+                </div>
+                <span class="text-xl font-bold neon-text-purple">xFrmannJS</span>
+            </div>
+            
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex space-x-6">
+                <a href="#home" class="text-gray-300 hover:text-purple-400 transition duration-300 flex items-center">
+                    <i class="fas fa-home mr-2"></i> Home
+                </a>
+                <a href="#education" class="text-gray-300 hover:text-cyan-400 transition duration-300 flex items-center">
+                    <i class="fas fa-graduation-cap mr-2"></i> Education
+                </a>
+                <a href="#projects" class="text-gray-300 hover:text-blue-400 transition duration-300 flex items-center">
+                    <i class="fas fa-code mr-2"></i> Projects
+                </a>
+                <a href="#marketplace" class="text-gray-300 hover:text-purple-400 transition duration-300 flex items-center">
+                    <i class="fas fa-store mr-2"></i> Marketplace
+                </a>
+                <a href="#contact" class="text-gray-300 hover:text-cyan-400 transition duration-300 flex items-center">
+                    <i class="fas fa-envelope mr-2"></i> Contact
+                </a>
+            </nav>
+            
+            <!-- Mobile Menu Button -->
+            <button id="mobileMenuButton" class="md:hidden text-gray-300 focus:outline-none">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-gray-900/95 backdrop-blur-sm border-t border-gray-800">
+            <div class="container mx-auto px-4 py-3 flex flex-col space-y-3">
+                <a href="#home" class="text-gray-300 hover:text-purple-400 transition duration-300 flex items-center py-2">
+                    <i class="fas fa-home mr-3"></i> Home
+                </a>
+                <a href="#education" class="text-gray-300 hover:text-cyan-400 transition duration-300 flex items-center py-2">
+                    <i class="fas fa-graduation-cap mr-3"></i> Education
+                </a>
+                <a href="#projects" class="text-gray-300 hover:text-blue-400 transition duration-300 flex items-center py-2">
+                    <i class="fas fa-code mr-3"></i> Projects
+                </a>
+                <a href="#marketplace" class="text-gray-300 hover:text-purple-400 transition duration-300 flex items-center py-2">
+                    <i class="fas fa-store mr-3"></i> Marketplace
+                </a>
+                <a href="#contact" class="text-gray-300 hover:text-cyan-400 transition duration-300 flex items-center py-2">
+                    <i class="fas fa-envelope mr-3"></i> Contact
+                </a>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Social Links Bar -->
+    <div class="bg-gray-800/80 backdrop-blur-sm py-2 px-4">
+        <div class="container mx-auto flex flex-wrap justify-center gap-4 md:gap-6">
+            <a href="https://whatsapp.com/channel/0029VaVguZr5q08f0z5C8g1u" target="_blank" class="text-gray-300 hover:text-green-400 transition duration-300 flex items-center text-sm">
+                <i class="fab fa-whatsapp mr-2 text-green-400"></i> Channel
+            </a>
+            <a href="https://chat.whatsapp.com/LAwjXtYOjYZ1WS3NNlfjvg" target="_blank" class="text-gray-300 hover:text-green-400 transition duration-300 flex items-center text-sm">
+                <i class="fas fa-users mr-2 text-green-400"></i> Official Group
+            </a>
+            <a href="https://wa.me/62857059457516" target="_blank" class="text-gray-300 hover:text-green-400 transition duration-300 flex items-center text-sm">
+                <i class="fas fa-robot mr-2 text-green-400"></i> Bot Number
+            </a>
+            <a href="https://wa.me/19419318284" target="_blank" class="text-gray-300 hover:text-green-400 transition duration-300 flex items-center text-sm">
+                <i class="fas fa-user-tie mr-2 text-green-400"></i> Owner Contact
+            </a>
+        </div>
+    </div>
+    
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex items-center justify-center relative overflow-hidden py-20">
+        <div class="container mx-auto px-4">
+            <div class="section max-w-4xl mx-auto text-center">
+                <h1 class="text-4xl md:text-6xl font-bold mb-6 neon-text-purple">
+                    WhatsApp Bot Developer <span class="text-purple-400">since 2020</span>
+                </h1>
+                <h2 class="text-xl md:text-2xl text-gray-300 mb-8">
+                    Not a Professional Developer, just a <span class="text-cyan-400">Hobbyist</span>.
+                </h2>
+                <p class="text-lg md:text-xl text-gray-400 mb-10 max-w-3xl mx-auto">
+                    I started developing WhatsApp bots as a hobby and keep improving them with new features. 
+                    <span class="text-blue-400 font-medium">AstroTech</span> is my main project, continuously updated with the latest technology.
+                </p>
+                <div class="text-purple-400 text-lg font-medium mb-12">
+                    <span class="neon-text-purple">Joined from 2021 to 2025</span>
+                </div>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="#projects" class="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-white font-medium hover:from-purple-700 hover:to-blue-700 transition duration-300 shadow-lg hover:shadow-purple-500/30 flex items-center">
+                        <i class="fas fa-code mr-2"></i> View Projects
+                    </a>
+                    <a href="#contact" class="px-8 py-3 border border-purple-400 text-purple-400 rounded-full font-medium hover:bg-purple-900/30 transition duration-300 flex items-center">
+                        <i class="fas fa-paper-plane mr-2"></i> Contact Me
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Education Timeline Section -->
+    <section id="education" class="py-20 bg-gray-900/50">
+        <div class="container mx-auto px-4">
+            <div class="section max-w-4xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center neon-text-cyan">
+                    <i class="fas fa-graduation-cap mr-3"></i> Education Timeline
+                </h2>
+                
+                <div class="relative pl-10">
+                    <!-- Timeline Items -->
+                    <div class="section timeline-item relative pb-10">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 hover:border-purple-500 transition duration-300">
+                            <h3 class="text-xl font-bold text-cyan-400 mb-2">Kindergarten</h3>
+                            <p class="text-gray-400">2010–2011</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section timeline-item relative pb-10">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 hover:border-purple-500 transition duration-300">
+                            <h3 class="text-xl font-bold text-cyan-400 mb-2">Elementary School</h3>
+                            <p class="text-gray-400">2011–2017</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section timeline-item relative pb-10">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 hover:border-purple-500 transition duration-300">
+                            <h3 class="text-xl font-bold text-cyan-400 mb-2">Junior High School</h3>
+                            <p class="text-gray-400">2017–2020</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section timeline-item relative pb-10">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 hover:border-purple-500 transition duration-300">
+                            <h3 class="text-xl font-bold text-cyan-400 mb-2">Senior High School</h3>
+                            <p class="text-gray-400">2020–2023</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section timeline-item relative">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 hover:border-purple-500 transition duration-300">
+                            <h3 class="text-xl font-bold text-cyan-400 mb-2">Prospective University Student</h3>
+                            <p class="text-gray-400">2025: University of Lambung Mangkurat</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Tools & Tech Stack Section -->
+    <section class="py-20 bg-gray-900/30">
+        <div class="container mx-auto px-4">
+            <div class="section max-w-6xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center neon-text-blue">
+                    <i class="fas fa-tools mr-3"></i> Tools & Tech Stack
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Tools -->
+                    <div class="section">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-blue-500 transition duration-300">
+                            <h3 class="text-xl font-bold text-blue-400 mb-4 flex items-center">
+                                <i class="fas fa-toolbox mr-3"></i> Tools
+                            </h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fab fa-microsoft text-blue-400 mr-2"></i>
+                                    <span>VSCode</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-code text-blue-400 mr-2"></i>
+                                    <span>WebStorm</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Packages -->
+                    <div class="section">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-blue-500 transition duration-300">
+                            <h3 class="text-xl font-bold text-blue-400 mb-4 flex items-center">
+                                <i class="fas fa-box-open mr-3"></i> Packages
+                            </h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fab fa-node-js text-green-500 mr-2"></i>
+                                    <span>Node.js</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-cube text-red-500 mr-2"></i>
+                                    <span>NPM</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-cubes text-blue-500 mr-2"></i>
+                                    <span>YARN</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-server text-purple-500 mr-2"></i>
+                                    <span>NVM</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Frameworks -->
+                    <div class="section">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-blue-500 transition duration-300">
+                            <h3 class="text-xl font-bold text-blue-400 mb-4 flex items-center">
+                                <i class="fas fa-shapes mr-3"></i> Frameworks
+                            </h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-plug text-orange-500 mr-2"></i>
+                                    <span>Socket.io</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-database text-yellow-500 mr-2"></i>
+                                    <span>Mongoose</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fab fa-node-js text-green-500 mr-2"></i>
+                                    <span>Express.js</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Development -->
+                    <div class="section">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-blue-500 transition duration-300">
+                            <h3 class="text-xl font-bold text-blue-400 mb-4 flex items-center">
+                                <i class="fas fa-code-branch mr-3"></i> Development
+                            </h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fab fa-git-alt text-orange-500 mr-2"></i>
+                                    <span>Git</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fab fa-github text-gray-300 mr-2"></i>
+                                    <span>GitHub</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fab fa-gitlab text-red-500 mr-2"></i>
+                                    <span>GitLab</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-check-double text-blue-400 mr-2"></i>
+                                    <span>ESLint</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-eye text-purple-400 mr-2"></i>
+                                    <span>Nodemon</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Database -->
+                    <div class="section">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-blue-500 transition duration-300">
+                            <h3 class="text-xl font-bold text-blue-400 mb-4 flex items-center">
+                                <i class="fas fa-database mr-3"></i> Database
+                            </h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-leaf text-green-500 mr-2"></i>
+                                    <span>MongoDB</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-database text-blue-500 mr-2"></i>
+                                    <span>DBeaver</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Deployment -->
+                    <div class="section">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-blue-500 transition duration-300">
+                            <h3 class="text-xl font-bold text-blue-400 mb-4 flex items-center">
+                                <i class="fas fa-rocket mr-3"></i> Deployment
+                            </h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-cloud text-gray-300 mr-2"></i>
+                                    <span>Vercel</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-server text-blue-400 mr-2"></i>
+                                    <span>Render</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-train text-orange-500 mr-2"></i>
+                                    <span>Railway</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fab fa-heroku text-purple-500 mr-2"></i>
+                                    <span>Heroku</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fab fa-docker text-blue-300 mr-2"></i>
+                                    <span>Docker</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-server text-green-400 mr-2"></i>
+                                    <span>VPS</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-dragon text-red-400 mr-2"></i>
+                                    <span>Pterodactyl</span>
+                                </div>
+                                <div class="flex items-center bg-gray-700/50 px-3 py-2 rounded-full">
+                                    <i class="fas fa-code text-yellow-400 mr-2"></i>
+                                    <span>Replit</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Main Project Section -->
+    <section id="projects" class="py-20 bg-gray-900/50">
+        <div class="container mx-auto px-4">
+            <div class="section max-w-6xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center neon-text-purple">
+                    <i class="fas fa-robot mr-3"></i> AstroBotz-MD PRO
+                </h2>
+                
+                <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-xl p-8 mb-12">
+                    <p class="text-lg text-gray-300 mb-6">
+                        A WhatsApp Messenger Robot that helps manage online needs — all through WhatsApp.
+                    </p>
+                    <div class="flex items-center text-purple-400">
+                        <i class="fas fa-calendar-check mr-2"></i>
+                        <span>Active: 2021–2025</span>
+                    </div>
+                </div>
+                
+                <h3 class="text-2xl font-bold text-center text-cyan-400 mb-8">Features</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Feature Cards -->
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fas fa-link"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">Anti-Link</h4>
+                            <p class="text-gray-400">Automatically detects and removes unwanted links</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fas fa-angry"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">Anti-Toxic</h4>
+                            <p class="text-gray-400">Filters and warns against toxic language</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fas fa-download"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">Media Downloader</h4>
+                            <p class="text-gray-400">Downloads videos, images and more from various platforms</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">Search Engine</h4>
+                            <p class="text-gray-400">Quick web searches directly from WhatsApp</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fas fa-sticky-note"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">Sticker Maker</h4>
+                            <p class="text-gray-400">Creates stickers from images with custom text</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fab fa-youtube"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">YouTube Audio</h4>
+                            <p class="text-gray-400">Downloads audio from YouTube videos</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fas fa-user-secret"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">Social Media Stalker</h4>
+                            <p class="text-gray-400">Gathers public info from social media profiles</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fas fa-gamepad"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">RPG Games</h4>
+                            <p class="text-gray-400">Play text-based RPG games with friends</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">Quiz Games</h4>
+                            <p class="text-gray-400">Challenge friends with trivia quizzes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">Group Management</h4>
+                            <p class="text-gray-400">Advanced tools for managing WhatsApp groups</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fas fa-wolf-pack-battalion"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">Werewolf Games</h4>
+                            <p class="text-gray-400">Play the popular Werewolf party game</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">ChatGPT Integration</h4>
+                            <p class="text-gray-400">AI-powered conversations with ChatGPT</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section feature-card">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-lg p-6 h-full hover:border-purple-500 transition duration-300">
+                            <div class="feature-icon text-4xl text-purple-400 mb-4">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <h4 class="text-xl font-bold text-white mb-2">Exclusive Features</h4>
+                            <p class="text-gray-400">Premium features for VIP users</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Digital Marketplace Section -->
+    <section id="marketplace" class="py-20 bg-gray-900/30">
+        <div class="container mx-auto px-4">
+            <div class="section max-w-6xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center neon-text-cyan">
+                    <i class="fas fa-shopping-cart mr-3"></i> Digital Marketplace
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Bot Rental Packages -->
+                    <div class="section">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-xl p-6 h-full hover:border-cyan-500 transition duration-300">
+                            <h3 class="text-2xl font-bold text-cyan-400 mb-6 flex items-center justify-center">
+                                <i class="fas fa-robot mr-3"></i> Bot Rental Packages
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="price-card relative w-full h-20">
+                                    <div class="price-card-inner w-full h-full">
+                                        <div class="price-card-front bg-gray-700/50 rounded-lg p-4 flex items-center justify-between border border-gray-600">
+                                            <div>
+                                                <h4 class="font-medium">7 Days</h4>
+                                                <p class="text-sm text-gray-400">Basic Access</p>
+                                            </div>
+                                            <div class="text-purple-400 font-bold">Rp3.000</div>
+                                        </div>
+                                        <div class="price-card-back bg-purple-900/30 rounded-lg p-4 flex items-center justify-center border border-purple-500">
+                                            <p class="text-center text-purple-300">Basic features for 7 days</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="price-card relative w-full h-20">
+                                    <div class="price-card-inner w-full h-full">
+                                        <div class="price-card-front bg-gray-700/50 rounded-lg p-4 flex items-center justify-between border border-gray-600">
+                                            <div>
+                                                <h4 class="font-medium">15 Days</h4>
+                                                <p class="text-sm text-gray-400">Standard Access</p>
+                                            </div>
+                                            <div class="text-purple-400 font-bold">Rp5.000</div>
+                                        </div>
+                                        <div class="price-card-back bg-purple-900/30 rounded-lg p-4 flex items-center justify-center border border-purple-500">
+                                            <p class="text-center text-purple-300">Standard features for 15 days</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="price-card relative w-full h-20">
+                                    <div class="price-card-inner w-full h-full">
+                                        <div class="price-card-front bg-gray-700/50 rounded-lg p-4 flex items-center justify-between border border-gray-600">
+                                            <div>
+                                                <h4 class="font-medium">30 Days</h4>
+                                                <p class="text-sm text-gray-400">Premium Access</p>
+                                            </div>
+                                            <div class="text-purple-400 font-bold">Rp10.000</div>
+                                        </div>
+                                        <div class="price-card-back bg-purple-900/30 rounded-lg p-4 flex items-center justify-center border border-purple-500">
+                                            <p class="text-center text-purple-300">Premium features for 30 days</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="price-card relative w-full h-20">
+                                    <div class="price-card-inner w-full h-full">
+                                        <div class="price-card-front bg-gray-700/50 rounded-lg p-4 flex items-center justify-between border border-gray-600">
+                                            <div>
+                                                <h4 class="font-medium">75 Days</h4>
+                                                <p class="text-sm text-gray-400">Extended Access</p>
+                                            </div>
+                                            <div class="text-purple-400 font-bold">Rp15.000</div>
+                                        </div>
+                                        <div class="price-card-back bg-purple-900/30 rounded-lg p-4 flex items-center justify-center border border-purple-500">
+                                            <p class="text-center text-purple-300">Extended features for 75 days</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="price-card relative w-full h-20">
+                                    <div class="price-card-inner w-full h-full">
+                                        <div class="price-card-front bg-gray-700/50 rounded-lg p-4 flex items-center justify-between border border-gray-600">
+                                            <div>
+                                                <h4 class="font-medium">100 Days</h4>
+                                                <p class="text-sm text-gray-400">Ultimate Access</p>
+                                            </div>
+                                            <div class="text-purple-400 font-bold">Rp20.000</div>
+                                        </div>
+                                        <div class="price-card-back bg-purple-900/30 rounded-lg p-4 flex items-center justify-center border border-purple-500">
+                                            <p class="text-center text-purple-300">All features for 100 days</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Premium User Access -->
+                    <div class="section">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-xl p-6 h-full hover:border-cyan-500 transition duration-300">
+                            <h3 class="text-2xl font-bold text-cyan-400 mb-6 flex items-center justify-center">
+                                <i class="fas fa-crown mr-3"></i> Premium User Access
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="price-card relative w-full h-20">
+                                    <div class="price-card-inner w-full h-full">
+                                        <div class="price-card-front bg-gray-700/50 rounded-lg p-4 flex items-center justify-between border border-gray-600">
+                                            <div>
+                                                <h4 class="font-medium">10 Days</h4>
+                                                <p class="text-sm text-gray-400">Basic VIP</p>
+                                            </div>
+                                            <div class="text-purple-400 font-bold">Rp2.000</div>
+                                        </div>
+                                        <div class="price-card-back bg-purple-900/30 rounded-lg p-4 flex items-center justify-center border border-purple-500">
+                                            <p class="text-center text-purple-300">Basic VIP features for 10 days</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="price-card relative w-full h-20">
+                                    <div class="price-card-inner w-full h-full">
+                                        <div class="price-card-front bg-gray-700/50 rounded-lg p-4 flex items-center justify-between border border-gray-600">
+                                            <div>
+                                                <h4 class="font-medium">30 Days</h4>
+                                                <p class="text-sm text-gray-400">Standard VIP</p>
+                                            </div>
+                                            <div class="text-purple-400 font-bold">Rp5.000</div>
+                                        </div>
+                                        <div class="price-card-back bg-purple-900/30 rounded-lg p-4 flex items-center justify-center border border-purple-500">
+                                            <p class="text-center text-purple-300">Standard VIP features for 30 days</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="price-card relative w-full h-20">
+                                    <div class="price-card-inner w-full h-full">
+                                        <div class="price-card-front bg-gray-700/50 rounded-lg p-4 flex items-center justify-between border border-gray-600">
+                                            <div>
+                                                <h4 class="font-medium">75 Days</h4>
+                                                <p class="text-sm text-gray-400">Premium VIP</p>
+                                            </div>
+                                            <div class="text-purple-400 font-bold">Rp8.000</div>
+                                        </div>
+                                        <div class="price-card-back bg-purple-900/30 rounded-lg p-4 flex items-center justify-center border border-purple-500">
+                                            <p class="text-center text-purple-300">Premium VIP features for 75 days</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="price-card relative w-full h-20">
+                                    <div class="price-card-inner w-full h-full">
+                                        <div class="price-card-front bg-gray-700/50 rounded-lg p-4 flex items-center justify-between border border-gray-600">
+                                            <div>
+                                                <h4 class="font-medium">100 Days</h4>
+                                                <p class="text-sm text-gray-400">Ultimate VIP</p>
+                                            </div>
+                                            <div class="text-purple-400 font-bold">Rp12.000</div>
+                                        </div>
+                                        <div class="price-card-back bg-purple-900/30 rounded-lg p-4 flex items-center justify-center border border-purple-500">
+                                            <p class="text-center text-purple-300">All VIP features for 100 days</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Source Code -->
+                    <div class="section">
+                        <div class="glow-box bg-gray-800/50 border border-gray-700 rounded-xl p-6 h-full hover:border-cyan-500 transition duration-300">
+                            <h3 class="text-2xl font-bold text-cyan-400 mb-6 flex items-center justify-center">
+                                <i class="fas fa-code mr-3"></i> Source Code
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="price-card relative w-full h-20">
+                                    <div class="price-card-inner w-full h-full">
+                                        <div class="price-card-front bg-gray-700/50 rounded-lg p-4 flex items-center justify-between border border-gray-600">
+                                            <div>
+                                                <h4 class="font-medium">1 Month Updates</h4>
+                                                <p class="text-sm text-gray-400">Basic Code</p>
+                                            </div>
+                                            <div class="text-purple-400 font-bold">Rp20.000</div>
+                                        </div>
+                                        <div class="price-card-back bg-purple-900/30 rounded-lg p-4 flex items-center justify-center border border-purple-500">
+                                            <p class="text-center text-purple-300">Source code with 1 month updates</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="price-card relative w-full h-20">
+                                    <div class="price-card-inner w-full h-full">
+                                        <div class="price-card-front bg-gray-700/50 rounded-lg p-4 flex items-center justify-between border border-gray-600">
+                                            <div>
+                                                <h4 class="font-medium">Lifetime Updates</h4>
+                                                <p class="text-sm text-gray-400">Full Code</p>
+                                            </div>
+                                            <div class="text-purple-400 font-bold">Rp35.000</div>
+                                        </div>
+                                        <div class="price-card-back bg-purple-900/30 rounded-lg p-4 flex items-center justify-center border border-purple-500">
+                                            <p class="text-center text-purple-300">Source code with lifetime updates</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-8 text-center">
+                                    <p class="text-gray-400 mb-4">Interested in any of these packages?</p>
+                                    <a href="#contact" class="px-6 py-2 bg-gradient-to-r from-cyan-600 to-purple-600 rounded-full text-white font-medium hover:from-cyan-700 hover:to-purple-700 transition duration-300 inline-flex items-center">
+                                        <i class="fas fa-paper-plane mr-2"></i> Contact Me
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-gray-900/50">
+        <div class="container mx-auto px-4">
+            <div class="section max-w-4xl mx-auto text-center">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 neon-text-purple">
+                    <i class="fas fa-envelope mr-3"></i> Get In Touch
+                </h2>
+                <p class="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
+                    Have questions about my projects or services? Feel free to reach out via WhatsApp.
+                </p>
+                
+                <div class="pulse inline-block">
+                    <a href="https://wa.me/19419318284" target="_blank" class="px-10 py-5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-white font-bold text-lg hover:from-purple-700 hover:to-blue-700 transition duration-300 shadow-xl hover:shadow-purple-500/40 flex items-center">
+                        <i class="fab fa-whatsapp text-2xl mr-3"></i> WhatsApp Contact
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-900/80 border-t border-gray-800 py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <div class="robot-logo flex items-center">
+                        <div class="relative w-10 h-10 mr-2">
+                            <div class="absolute w-full h-full rounded-full bg-gray-800 flex items-center justify-center">
+                                <div class="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center">
+                                    <div class="w-5 h-5 rounded-full bg-gray-600 flex items-center justify-center overflow-hidden">
+                                        <div class="relative w-full h-full">
+                                            <div class="robot-eye absolute left-1 top-1 w-1 h-4 bg-white rounded-full"></div>
+                                            <div class="robot-eye absolute right-1 top-1 w-1 h-4 bg-white rounded-full"></div>
+                                            <div class="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-1 bg-white rounded-full"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-5 h-1 bg-gray-600 rounded-full"></div>
+                            </div>
+                        </div>
+                        <span class="text-lg font-bold neon-text-purple">xFrmannJS</span>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-6">
+                    <a href="https://whatsapp.com/channel/0029VaVguZr5q08f0z5C8g1u" target="_blank" class="text-gray-400 hover:text-green-400 transition duration-300">
+                        <i class="fab fa-whatsapp text-xl"></i>
+                    </a>
+                    <a href="https://chat.whatsapp.com/LAwjXtYOjYZ1WS3NNlfjvg" target="_blank" class="text-gray-400 hover:text-green-400 transition duration-300">
+                        <i class="fas fa-users text-xl"></i>
+                    </a>
+                    <a href="https://wa.me/62857059457516" target="_blank" class="text-gray-400 hover:text-green-400 transition duration-300">
+                        <i class="fas fa-robot text-xl"></i>
+                    </a>
+                    <a href="https://wa.me/19419318284" target="_blank" class="text-gray-400 hover:text-green-400 transition duration-300">
+                        <i class="fas fa-user-tie text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500">
+                <p>Copyright © <span class="neon-text-purple">xFrmannJS</span> 2023. All rights reserved.</p>
+                <p class="mt-2 text-sm">Made with <i class="fas fa-heart text-red-400"></i> by a hobbyist developer</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Create ripple background effect
+        document.addEventListener('DOMContentLoaded', function() {
+            const rippleContainer = document.getElementById('rippleContainer');
+            const colors = ['rgba(56, 182, 255, 0.1)', 'rgba(168, 85, 247, 0.1)', 'rgba(6, 182, 212, 0.1)'];
+            
+            function createRipple() {
+                const ripple = document.createElement('div');
+                ripple.className = 'ripple';
+                
+                // Random position
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                
+                // Random size
+                const size = Math.random() * 200 + 50;
+                
+                // Random color
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                ripple.style.width = `${size}px`;
+                ripple.style.height = `${size}px`;
+                ripple.style.background = color;
+                
+                // Random animation duration
+                const duration = Math.random() * 10 + 10;
+                ripple.style.animationDuration = `${duration}s`;
+                
+                rippleContainer.appendChild(ripple);
+                
+                // Remove ripple after animation completes
+                setTimeout(() => {
+                    ripple.remove();
+                }, duration * 1000);
+            }
+            
+            // Create initial ripples
+            for (let i = 0; i < 5; i++) {
+                createRipple();
+            }
+            
+            // Create new ripples periodically
+            setInterval(createRipple, 3000);
+            
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobileMenuButton');
+            const mobileMenu = document.getElementById('mobileMenu');
+            
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // Scroll animation
+            const sections = document.querySelectorAll('.section');
+            
+            function checkScroll() {
+                sections.forEach(section => {
+                    const sectionTop = section.getBoundingClientRect().top;
+                    const windowHeight = window.innerHeight;
+                    
+                    if (sectionTop < windowHeight - 100) {
+                        section.classList.add('visible');
+                    }
+                });
+            }
+            
+            // Initial check
+            checkScroll();
+            
+            // Check on scroll
+            window.addEventListener('scroll', checkScroll);
+        });
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=xFrmannJS/v2" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</html>
